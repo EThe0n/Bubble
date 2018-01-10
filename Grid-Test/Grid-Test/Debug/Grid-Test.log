@@ -1,0 +1,4 @@
+﻿  main.cpp
+d:\workspace\gl\glfw_tutorial\grid-test\grid-test\main.cpp(92): warning C4244: '인수': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  Grid-Test.vcxproj -> D:\workspace\GL\GLFW_Tutorial\Grid-Test\Debug\Grid-Test.exe
+  Grid-Test.vcxproj -> D:\workspace\GL\GLFW_Tutorial\Grid-Test\Debug\Grid-Test.pdb (Partial PDB)
