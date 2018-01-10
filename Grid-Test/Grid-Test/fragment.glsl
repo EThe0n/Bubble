@@ -16,6 +16,10 @@ void main()
 		pixelColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 	}
 	else if (channel == PARTICLE_CHANNEL) {
-		pixelColor = texture(myTextureSampler, UV) * vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		vec4 texel = texture(myTextureSampler, UV);
+		if (texel.a < 0.9) {
+			discard;
+		}
+		pixelColor = texel * vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }

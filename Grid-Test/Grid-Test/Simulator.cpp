@@ -23,17 +23,13 @@ Simulator::Simulator()
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		// initialize particle
 		Particle& p = particleContainer[i];
-		p.position = vec3(rand() % X_MAX, rand() % Y_MAX, 0);
+		//p.position = vec3(rand() % X_MAX, rand() % Y_MAX, 0);
+		p.position = vec3(1, i * rand() % Y_MAX, 0);
 		p.size = PARTICLE_SIZE;
-		p.speed = vec3(0, 0, 0);
-		p.leapFrog = vec3(0, 0, 0);
 		p.massDensity = REST_DENSITY;
 
 		// initialize linked cell
-		register int x = (p.position.x - X_MIN) / CELL_SIZE;
-		register int y = (p.position.y - Y_MIN) / CELL_SIZE;
-		register int index = y * NUM_CELL_X + x;
-		cellContainer[index].push_back(&particleContainer[i]);
+		cellContainer[getCellIndex(p.position)].push_back(&particleContainer[i]);
 	}
 	particleCount = MAX_PARTICLE;
 
@@ -119,16 +115,17 @@ void Simulator::simulate(float deltaTime)
 	particleCount = 0;
 
 	// gravity
-	vec3 totalForce = vec3(0.0f, -9.81f, 0.0f);
-	
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		Particle& p = particleContainer[i];
+		vec3 totalForce = p.gravity + p.pressure + p.viscosity + p.surface;
 		vec3 accel = totalForce / p.massDensity;
 
 		p.leapFrog += accel * deltaTime;
 	}
-	
+
+	collisionHandling();
 	boundCollision();
+
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 
 		Particle& p = particleContainer[i]; // shortcut
@@ -138,12 +135,13 @@ void Simulator::simulate(float deltaTime)
 		int size = 4 * particleCount;
 		dev_particlePositionSizeData[size + 0] = p.position.x;
 		dev_particlePositionSizeData[size + 1] = p.position.y;
-//		dev_particlePositionSizeData[size + 2] = p.position.z;
 		dev_particlePositionSizeData[size + 2] = 0.0f;
 		dev_particlePositionSizeData[size + 3] = p.size;
 		
 		particleCount++;
 	}
+
+	updateLinkedCell();
 }
 
 void Simulator::update()
@@ -152,6 +150,24 @@ void Simulator::update()
 	glBindBuffer(GL_ARRAY_BUFFER, particlePositionBuffer);
 	glBufferData(GL_ARRAY_BUFFER, size * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
 	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCount * sizeof(GLfloat) * 4, dev_particlePositionSizeData);
+}
+
+int Simulator::getCellIndex(const vec3 & position)
+{
+	register int x = (position.x - X_MIN) / CELL_SIZE;
+	register int y = (position.y - Y_MIN) / CELL_SIZE;
+	return y * NUM_CELL_X + x;
+}
+
+void Simulator::updateLinkedCell()
+{
+	for (auto& cell : cellContainer) {
+		cell.clear();
+	}
+
+	for (int i = 0; i < MAX_PARTICLE; i++) {
+		cellContainer[getCellIndex(particleContainer[i].position)].push_back(&particleContainer[i]);
+	}
 }
 
 void Simulator::initNeighborCellIndex(int nCell)
@@ -212,8 +228,56 @@ void Simulator::boundCollision()
 
 void Simulator::collisionHandling()
 {
-	for (register int i = 0; i < particleCount; ++i) {
+	int neighbor[5];
 
+	for (register int i = 0; i < MAX_PARTICLE; ++i) {
+		Particle* p = &particleContainer[i];
+		int idx = getCellIndex(p->position);
+		register int neighborCount = cellNeighborIndex[idx][0];
+
+		memcpy(neighbor, cellNeighborIndex[idx], sizeof(int) * neighborCount);
+		neighbor[0] = idx;
+
+		for (register int j = 0; j < neighborCount; ++j) {
+			int until = cellContainer[neighbor[j]].size();
+
+			for (Particle* rhs : cellContainer[neighbor[j]])
+			{
+				vec3 dist = p->position - rhs->position;
+				float len = glm::length(dist);
+					
+				if (len > 0 && len <= PARTICLE_SIZE) {
+					vec3 norm = dist / len;
+					vec3 cp = p->position + RADIUS * norm;
+					rhs->position = cp;
+					rhs->speed = rhs->speed - glm::dot(rhs->speed, norm) * norm;
+
+					vec3 normal;
+
+					if (rhs->position.x < X_MIN) {
+						normal = vec3(1, 0, 0);
+						rhs->position.x = X_MIN;
+					}
+					else if (rhs->position.x > X_MAX) {
+						normal = vec3(-1, 0, 0);
+						rhs->position.x = X_MAX;
+					}
+					else if (rhs->position.y < Y_MIN) {
+						normal = vec3(0, 1, 0);
+						rhs->position.y = Y_MIN;
+					}
+					else if (rhs->position.y > Y_MAX) {
+						normal = vec3(0, -1, 0);
+						rhs->position.y = Y_MAX;
+					}
+
+					float alpha = sqrtf((rhs->speed.x * rhs->speed.x) + (rhs->speed.y * rhs->speed.y));
+					vec3 speed = rhs->speed / alpha;
+					speed = 2 * (glm::dot(-speed, normal)) * normal + speed;
+					speed *= alpha;
+				}
+			}
+		}
 	}
 }
 

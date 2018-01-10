@@ -30,6 +30,13 @@ struct Particle
 	vec3 surface;
 
 	float size;
+	Particle() :
+		pressure(vec3(0.0f, 0.0f, 0.0f)),
+		gravity(vec3(0.0f, -9.81f, 0.0f)),
+		viscosity(vec3(0.0f, 0.0f, 0.0f)),
+		surface(vec3(0.0f, 0.0f, 0.0f)),
+		speed(vec3(0.0f, 0.0f, 0.0f)),
+		leapFrog(vec3(0.0f, 0.0f, 0.0f)){}
 };
 
 typedef list<Particle*> Cell;
@@ -62,6 +69,8 @@ private :
 	int				lastUsedParticleIndex;
 
 private :
+	int				getCellIndex(const vec3& position);
+	void			updateLinkedCell();
 	void			initNeighborCellIndex(int nCell);
 	void			boundCollision();
 	void			collisionHandling();

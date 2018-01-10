@@ -16,10 +16,10 @@
 
 // Coordinate
 #define X_MIN		0 
-#define X_MAX		100
+#define X_MAX		10
 
 #define Y_MIN		0
-#define Y_MAX		100
+#define Y_MAX		10
 
 #define Z_MIN		0
 #define Z_MAX		10
@@ -30,8 +30,9 @@
 #define NUM_CELL_Y	((Y_MAX - Y_MIN) / CELL_SIZE)
 #define NUM_CELL	NUM_CELL_X * NUM_CELL_Y
 
-#define PARTICLE_SIZE 2
-#define MAX_PARTICLE 10000
+#define PARTICLE_SIZE	2.0f
+#define RADIUS			0.5f * PARTICLE_SIZE
+#define MAX_PARTICLE 2
 
 // Rendering Option
 #define GRID_CHANNEL 1

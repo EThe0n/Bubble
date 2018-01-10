@@ -68,6 +68,9 @@ int main()
 	Camera camera = Camera(vec3((X_MAX + X_MIN) / 2.0f, (Y_MAX + Y_MIN) / 2.0f, X_MAX * 1.5));
 	Grid grid = Grid(X_MIN, X_MAX, Y_MIN, Y_MAX, CELL_SIZE); 
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glUniform1i(TextureID, 0);
@@ -75,7 +78,7 @@ int main()
 	double lastTime = glfwGetTime();
 	do {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 		// get time
 		double currentTime = glfwGetTime();
@@ -93,17 +96,16 @@ int main()
 		particles.update();
 
 		// render
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
 		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, &mvp[0][0]);
 		glUniform3f(CameraRight_worldspace_ID, v[0][0], v[1][0], v[2][0]);
 		glUniform3f(CameraUp_worldspace_ID, v[0][1], v[1][1], v[2][1]);
 
-		glUniform1i(channel, GRID_CHANNEL);
-		grid.render();
-
 		glUniform1i(channel, PARTICLE_CHANNEL);
 		particles.render();
+
+		glUniform1i(channel, GRID_CHANNEL);
+		grid.render();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
