@@ -72,7 +72,7 @@ private :
 	int				getCellIndex(const vec3& position);
 	void			updateLinkedCell();
 	void			initNeighborCellIndex(int nCell);
-	void			boundCollision();
+	void			boundCollision(Particle& p);
 	void			collisionHandling();
 	void			calcMassDensity();
 	float			KernelFunction(float r, float h);

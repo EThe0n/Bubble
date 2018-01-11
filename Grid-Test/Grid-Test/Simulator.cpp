@@ -23,8 +23,8 @@ Simulator::Simulator()
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		// initialize particle
 		Particle& p = particleContainer[i];
-		//p.position = vec3(rand() % X_MAX, rand() % Y_MAX, 0);
-		p.position = vec3(1, i * rand() % Y_MAX, 0);
+		p.position = vec3(rand() % X_MAX, rand() % Y_MAX, 0);
+		//p.position = vec3(1, i * rand() % Y_MAX, 0);
 		p.size = PARTICLE_SIZE;
 		p.massDensity = REST_DENSITY;
 
@@ -120,16 +120,20 @@ void Simulator::simulate(float deltaTime)
 		vec3 totalForce = p.gravity + p.pressure + p.viscosity + p.surface;
 		vec3 accel = totalForce / p.massDensity;
 
-		p.leapFrog += accel * deltaTime;
+		p.speed += accel * deltaTime;
 	}
 
-	collisionHandling();
-	boundCollision();
+	//collisionHandling();
+	//boundCollision();
 
 	for (int i = 0; i < MAX_PARTICLE; i++) {
-
 		Particle& p = particleContainer[i]; // shortcut
-		p.position += p.leapFrog * (float)deltaTime * 100.0f; // meter to centimeter
+		p.position += p.speed * (float)deltaTime * 100.0f; // meter to centimeter
+
+		// boundary collsiion handling
+		boundCollision(p);
+
+		// object collision handling
 
 		// Fill the GPU buffer
 		int size = 4 * particleCount;
@@ -200,30 +204,35 @@ void Simulator::initNeighborCellIndex(int nCell)
 	}
 }
 
-void Simulator::boundCollision()
+void Simulator::boundCollision(Particle& p)
 {
-	for (int i = 0; i < MAX_PARTICLE; i++) {
-		Particle& p = particleContainer[i];
-		vec3 normal;
-		
-		if (p.position.x < X_MIN) {
-			normal = vec3(1, 0, 0);
-			p.position.x = X_MIN;
-		}
-		else if (p.position.x > X_MAX) {
-			normal = vec3(-1, 0, 0);
-			p.position.x = X_MAX;
-		}
-		else if (p.position.y < Y_MIN) {
-			normal = vec3(0, 1, 0);
-			p.position.y = Y_MIN;
-		}
-		
-		float alpha = sqrtf((p.speed.x * p.speed.x) + (p.speed.y * p.speed.y));
-		vec3 speed = p.speed / alpha;
-		speed = 2 * (glm::dot(-speed, normal)) * normal + speed;
-		speed *= alpha;
+	vec3 normal = vec3(0.0f, 0.0f, 0.0f);
+
+	if (p.position.x < X_MIN + RADIUS) {
+		normal += vec3(1, 0, 0);
+		p.position.x = X_MIN + RADIUS;
 	}
+	if (p.position.y < Y_MIN + RADIUS) {
+		normal += vec3(0, 1, 0);
+		p.position.y = Y_MIN + RADIUS;
+	}
+	if (p.position.x > X_MAX - RADIUS) {
+		normal += vec3(-1, 0, 0);
+		p.position.x = X_MAX - RADIUS;
+	}
+	if (p.position.y > Y_MAX - RADIUS) {
+		normal += vec3(0, -1, 0);
+		p.position.y = Y_MAX - RADIUS;
+	}
+	
+	if (glm::length(normal) > 1.0f) {
+		normal = normalize(normal);
+	}
+
+	float alpha = glm::length(p.speed);
+	vec3 speed = glm::normalize(p.speed);
+	speed = (1 + RESTITUTION) * (glm::dot(-speed, normal)) * normal + speed;
+	p.speed = speed * alpha;
 }
 
 void Simulator::collisionHandling()
@@ -247,34 +256,34 @@ void Simulator::collisionHandling()
 				float len = glm::length(dist);
 					
 				if (len > 0 && len <= PARTICLE_SIZE) {
-					vec3 norm = dist / len;
+					vec3 norm = glm::normalize(dist);
 					vec3 cp = p->position + RADIUS * norm;
 					rhs->position = cp;
-					rhs->speed = rhs->speed - glm::dot(rhs->speed, norm) * norm;
-
+					//rhs->speed = rhs->speed - glm::dot(rhs->speed, norm) * norm;
+					
 					vec3 normal;
 
 					if (rhs->position.x < X_MIN) {
 						normal = vec3(1, 0, 0);
-						rhs->position.x = X_MIN;
+						rhs->position.x = X_MIN + RADIUS;
 					}
-					else if (rhs->position.x > X_MAX) {
-						normal = vec3(-1, 0, 0);
-						rhs->position.x = X_MAX;
-					}
-					else if (rhs->position.y < Y_MIN) {
+					if (rhs->position.y < Y_MIN) {
 						normal = vec3(0, 1, 0);
-						rhs->position.y = Y_MIN;
+						rhs->position.y = Y_MIN + RADIUS;
 					}
-					else if (rhs->position.y > Y_MAX) {
+					if (rhs->position.x > X_MAX) {
+						normal = vec3(-1, 0, 0);
+						rhs->position.x = X_MAX - RADIUS;
+					}
+					if (rhs->position.y > Y_MAX) {
 						normal = vec3(0, -1, 0);
-						rhs->position.y = Y_MAX;
+						rhs->position.y = Y_MAX - RADIUS;
 					}
 
-					float alpha = sqrtf((rhs->speed.x * rhs->speed.x) + (rhs->speed.y * rhs->speed.y));
-					vec3 speed = rhs->speed / alpha;
-					speed = 2 * (glm::dot(-speed, normal)) * normal + speed;
-					speed *= alpha;
+					//float alpha = sqrtf((rhs->speed.x * rhs->speed.x) + (rhs->speed.y * rhs->speed.y));
+					//vec3 speed = rhs->speed / alpha;
+					//speed = 2 * (glm::dot(-speed, normal)) * normal + speed;
+					//speed *= alpha;
 				}
 			}
 		}

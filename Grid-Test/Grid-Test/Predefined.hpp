@@ -16,10 +16,10 @@
 
 // Coordinate
 #define X_MIN		0 
-#define X_MAX		10
+#define X_MAX		100
 
 #define Y_MIN		0
-#define Y_MAX		10
+#define Y_MAX		100
 
 #define Z_MIN		0
 #define Z_MAX		10
@@ -31,8 +31,8 @@
 #define NUM_CELL	NUM_CELL_X * NUM_CELL_Y
 
 #define PARTICLE_SIZE	2.0f
-#define RADIUS			0.5f * PARTICLE_SIZE
-#define MAX_PARTICLE 2
+#define RADIUS			0.4f * PARTICLE_SIZE
+#define MAX_PARTICLE	2000
 
 // Rendering Option
 #define GRID_CHANNEL 1
@@ -44,3 +44,4 @@
 
 #define REST_DENSITY	998.29f
 #define GAS_STIFFNESS	3
+#define RESTITUTION		0
