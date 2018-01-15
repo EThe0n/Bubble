@@ -112,9 +112,6 @@ void Simulator::render()
 
 void Simulator::simulate(float deltaTime)
 {
-	particleCount = 0;
-
-	// gravity
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		Particle& p = particleContainer[i];
 		vec3 totalForce = p.gravity + p.pressure + p.viscosity + p.surface;
@@ -123,17 +120,27 @@ void Simulator::simulate(float deltaTime)
 		p.speed += accel * deltaTime;
 	}
 
-	//collisionHandling();
-	//boundCollision();
-
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		Particle& p = particleContainer[i]; // shortcut
 		p.position += p.speed * (float)deltaTime * 100.0f; // meter to centimeter
+	}
 
-		// boundary collsiion handling
+	// object collision handling
+	for (int i = 0; i < NUM_CELL; i++) {
+		collisionHandling(i);
+	}
+
+	// boundary collsiion handling
+	for (int i = 0; i < MAX_PARTICLE; i++) {
+		Particle& p = particleContainer[i];
 		boundCollision(p);
+	}
 
-		// object collision handling
+	updateLinkedCell();
+
+	particleCount = 0;
+	for (register int i = 0; i < MAX_PARTICLE; i++) {
+		Particle& p = particleContainer[i]; // shortcut
 
 		// Fill the GPU buffer
 		int size = 4 * particleCount;
@@ -141,11 +148,9 @@ void Simulator::simulate(float deltaTime)
 		dev_particlePositionSizeData[size + 1] = p.position.y;
 		dev_particlePositionSizeData[size + 2] = 0.0f;
 		dev_particlePositionSizeData[size + 3] = p.size;
-		
+
 		particleCount++;
 	}
-
-	updateLinkedCell();
 }
 
 void Simulator::update()
@@ -230,60 +235,56 @@ void Simulator::boundCollision(Particle& p)
 	}
 
 	float alpha = glm::length(p.speed);
-	vec3 speed = glm::normalize(p.speed);
-	speed = (1 + RESTITUTION) * (glm::dot(-speed, normal)) * normal + speed;
-	p.speed = speed * alpha;
+	
+	if (alpha > 0.0f) {
+		vec3 speed = glm::normalize(p.speed);
+		speed = (1 + RESTITUTION) * (glm::dot(-speed, normal)) * normal + speed;
+		p.speed = speed * alpha;
+	}
 }
 
-void Simulator::collisionHandling()
+void Simulator::collisionHandling(int cellIndex)
 {
-	int neighbor[5];
+	int neighbor[5] = { 0 };
+	int neighborCount = cellNeighborIndex[cellIndex][0];
+	Cell& c = cellContainer[cellIndex];
 
-	for (register int i = 0; i < MAX_PARTICLE; ++i) {
-		Particle* p = &particleContainer[i];
-		int idx = getCellIndex(p->position);
-		register int neighborCount = cellNeighborIndex[idx][0];
+	memcpy(neighbor, cellNeighborIndex[cellIndex], sizeof(int) * neighborCount);
+	
+	register int size = c.size();
+	for (register int i = 0; i < size; i++) {
+		Particle& lhs = *c[i];
 
-		memcpy(neighbor, cellNeighborIndex[idx], sizeof(int) * neighborCount);
-		neighbor[0] = idx;
+		for (register int j = i + 1; j < size; j++) {
+			Particle& rhs = *c[j];
 
-		for (register int j = 0; j < neighborCount; ++j) {
-			int until = cellContainer[neighbor[j]].size();
+			float d = glm::length(lhs.position - rhs.position);
 
-			for (Particle* rhs : cellContainer[neighbor[j]])
-			{
-				vec3 dist = p->position - rhs->position;
-				float len = glm::length(dist);
-					
-				if (len > 0 && len <= PARTICLE_SIZE) {
-					vec3 norm = glm::normalize(dist);
-					vec3 cp = p->position + RADIUS * norm;
-					rhs->position = cp;
-					//rhs->speed = rhs->speed - glm::dot(rhs->speed, norm) * norm;
-					
-					vec3 normal;
+			if (d > 0.0f && d < 2.0f * RADIUS) {
+				vec3 n = glm::normalize(rhs.position - lhs.position);
 
-					if (rhs->position.x < X_MIN) {
-						normal = vec3(1, 0, 0);
-						rhs->position.x = X_MIN + RADIUS;
-					}
-					if (rhs->position.y < Y_MIN) {
-						normal = vec3(0, 1, 0);
-						rhs->position.y = Y_MIN + RADIUS;
-					}
-					if (rhs->position.x > X_MAX) {
-						normal = vec3(-1, 0, 0);
-						rhs->position.x = X_MAX - RADIUS;
-					}
-					if (rhs->position.y > Y_MAX) {
-						normal = vec3(0, -1, 0);
-						rhs->position.y = Y_MAX - RADIUS;
-					}
+				// move rhs particle's position
+				rhs.position += n * (2.0f * RADIUS - d);
 
-					//float alpha = sqrtf((rhs->speed.x * rhs->speed.x) + (rhs->speed.y * rhs->speed.y));
-					//vec3 speed = rhs->speed / alpha;
-					//speed = 2 * (glm::dot(-speed, normal)) * normal + speed;
-					//speed *= alpha;
+				// change rhs speed
+				rhs.speed = rhs.speed - glm::dot(rhs.speed, n) * n;
+			}
+		}
+
+		for (register int j = 1; j <= neighborCount; j++) {
+			Cell& neighborCell = cellContainer[neighbor[j]];
+
+			for (Particle* rhs : neighborCell) {
+				float d = glm::length(lhs.position - rhs->position);
+
+				if (d > 0.0f && d < 2.0f * RADIUS) {
+					vec3 n = glm::normalize(rhs->position - lhs.position);
+
+					// move rhs particle's position
+					rhs->position += n * (2.0f * RADIUS - d);
+
+					// change rhs speed
+					rhs->speed -= glm::dot(rhs->speed, n) * n;
 				}
 			}
 		}

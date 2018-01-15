@@ -1,11 +1,12 @@
-﻿  main.cpp
-d:\workspace\bubble\grid-test\grid-test\main.cpp(158): warning C4244: '인수': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  Simulator.cpp
-d:\workspace\bubble\grid-test\grid-test\simulator.cpp(161): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\workspace\bubble\grid-test\grid-test\simulator.cpp(162): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+﻿  Camera.cpp
   코드를 생성하고 있습니다...
   컴파일하고 있습니다...
+  main.cpp
+d:\workspace\bubble\grid-test\grid-test\main.cpp(158): warning C4244: '인수': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   Texture.cpp
+  Simulator.cpp
+d:\workspace\bubble\grid-test\grid-test\simulator.cpp(166): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\workspace\bubble\grid-test\grid-test\simulator.cpp(167): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   Grid.cpp
 d:\workspace\bubble\grid-test\grid-test\grid.cpp(15): warning C4244: '=': 'int'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\workspace\bubble\grid-test\grid-test\grid.cpp(16): warning C4244: '=': 'int'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
@@ -15,7 +16,6 @@ d:\workspace\bubble\grid-test\grid-test\grid.cpp(27): warning C4244: '=': 'int'�
 d:\workspace\bubble\grid-test\grid-test\grid.cpp(28): warning C4244: '=': 'int'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\workspace\bubble\grid-test\grid-test\grid.cpp(31): warning C4244: '=': 'int'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\workspace\bubble\grid-test\grid-test\grid.cpp(32): warning C4244: '=': 'int'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  Camera.cpp
   코드를 생성하고 있습니다...
   Grid-Test.vcxproj -> D:\workspace\Bubble\Grid-Test\Debug\Grid-Test.exe
   Grid-Test.vcxproj -> D:\workspace\Bubble\Grid-Test\Debug\Grid-Test.pdb (Partial PDB)

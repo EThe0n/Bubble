@@ -39,7 +39,7 @@ struct Particle
 		leapFrog(vec3(0.0f, 0.0f, 0.0f)){}
 };
 
-typedef list<Particle*> Cell;
+typedef vector<Particle*> Cell;
 
 class Simulator
 {
@@ -73,7 +73,7 @@ private :
 	void			updateLinkedCell();
 	void			initNeighborCellIndex(int nCell);
 	void			boundCollision(Particle& p);
-	void			collisionHandling();
+	void			collisionHandling(int cellIndex);
 	void			calcMassDensity();
 	float			KernelFunction(float r, float h);
 	float			GradientKernelFunction(float r, float h);
