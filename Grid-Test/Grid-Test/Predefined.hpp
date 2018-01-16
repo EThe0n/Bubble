@@ -16,10 +16,10 @@
 
 // Coordinate
 #define X_MIN		0 
-#define X_MAX		100
+#define X_MAX		20
 
 #define Y_MIN		0
-#define Y_MAX		100
+#define Y_MAX		20
 
 #define Z_MIN		0
 #define Z_MAX		10
@@ -32,7 +32,7 @@
 
 #define PARTICLE_SIZE	2.0f
 #define RADIUS			0.4f * PARTICLE_SIZE
-#define MAX_PARTICLE	2000
+#define MAX_PARTICLE	50
 
 // Rendering Option
 #define GRID_CHANNEL 1

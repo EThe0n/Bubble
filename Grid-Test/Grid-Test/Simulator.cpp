@@ -20,19 +20,25 @@ Simulator::Simulator()
 	dev_particlePositionSizeData = new GLfloat[p_size];
 	dev_particleColorData = new GLubyte[p_size];
 
+	float xPos = X_MIN;
+	float yPos = Y_MIN;
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		// initialize particle
 		Particle& p = particleContainer[i];
-		p.position = vec3(rand() % X_MAX, rand() % Y_MAX, 0);
-		//p.position = vec3(1, i * rand() % Y_MAX, 0);
+		p.position = vec3(xPos, yPos, 0);
 		p.size = PARTICLE_SIZE;
 		p.massDensity = REST_DENSITY;
-
-		// initialize linked cell
-		cellContainer[getCellIndex(p.position)].push_back(&particleContainer[i]);
+		xPos += RADIUS * 2.5f;
+		if (xPos >= X_MAX) {
+			xPos = X_MIN;
+			yPos += RADIUS * 3.0f;
+		}
 	}
 	particleCount = MAX_PARTICLE;
 
+	// initialize linked cell
+	updateLinkedCell();
+	
 	// initialize neighbor cell index
 	initNeighborCellIndex(c_size);
 
@@ -249,7 +255,7 @@ void Simulator::collisionHandling(int cellIndex)
 	int neighborCount = cellNeighborIndex[cellIndex][0];
 	Cell& c = cellContainer[cellIndex];
 
-	memcpy(neighbor, cellNeighborIndex[cellIndex], sizeof(int) * neighborCount);
+	memcpy(neighbor, cellNeighborIndex[cellIndex], sizeof(int) * (neighborCount + 1));
 	
 	register int size = c.size();
 	for (register int i = 0; i < size; i++) {
