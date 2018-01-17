@@ -40,6 +40,7 @@ struct Particle
 };
 
 typedef vector<Particle*> Cell;
+typedef enum {Default, Gradient, Laplacian} KernelFunctionType;
 
 class Simulator
 {
@@ -75,7 +76,7 @@ private :
 	void			boundCollision(Particle& p);
 	void			collisionHandling(int cellIndex);
 	void			calcMassDensity();
-	float			KernelFunction(float r, float h);
-	float			GradientKernelFunction(float r, float h);
-	float			LaplacianKernelFunction(float r, float h);
+	float			polynomialKernel(const vec3& r, float h, KernelFunctionType type);
+	float			spikyKernel(const vec3& r, float h, KernelFunctionType type);
+	float			viscosityKernel(const vec3& r, float h, KernelFunctionType type);
 };

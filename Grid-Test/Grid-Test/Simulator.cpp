@@ -10,6 +10,9 @@ using std::sort;
 #include "Simulator.hpp"
 #include "Predefined.hpp"
 
+#define PARTICLE_PLACE_RANDOM
+//#define PARTICLE_PLACE_DAM
+
 Simulator::Simulator()
 {
 	const int p_size = MAX_PARTICLE * 4;
@@ -19,7 +22,7 @@ Simulator::Simulator()
 	particleContainer = new Particle[MAX_PARTICLE];
 	dev_particlePositionSizeData = new GLfloat[p_size];
 	dev_particleColorData = new GLubyte[p_size];
-
+#ifdef PARTICLE_PLACE_DAM
 	float xPos = X_MIN;
 	float yPos = Y_MIN;
 	for (int i = 0; i < MAX_PARTICLE; i++) {
@@ -34,6 +37,16 @@ Simulator::Simulator()
 			yPos += RADIUS * 3.0f;
 		}
 	}
+#endif
+#ifdef PARTICLE_PLACE_RANDOM
+	for (int i = 0; i < MAX_PARTICLE; i++) {
+		// initialize particle
+		Particle& p = particleContainer[i];
+		p.position = vec3(rand() % (X_MAX - X_MIN) + X_MIN, rand() % (Y_MAX - Y_MIN) + Y_MIN, 0);
+		p.size = PARTICLE_SIZE;
+		p.massDensity = REST_DENSITY;
+	}
+#endif
 	particleCount = MAX_PARTICLE;
 
 	// initialize linked cell
@@ -118,6 +131,8 @@ void Simulator::render()
 
 void Simulator::simulate(float deltaTime)
 {
+	calcMassDensity();
+
 	for (int i = 0; i < MAX_PARTICLE; i++) {
 		Particle& p = particleContainer[i];
 		vec3 totalForce = p.gravity + p.pressure + p.viscosity + p.surface;
@@ -301,32 +316,103 @@ void Simulator::calcMassDensity()
 {
 	const int nCell = cellContainer.size();
 	
+	for (register int i = 0; i < MAX_PARTICLE; ++i) {
+		particleContainer[i].massDensity = REST_DENSITY;
+	}
+
+	int neighbor[5] = { 0 };
+	
 	for (register int i = 0; i < nCell; ++i) {
+		Cell& c = cellContainer[i];
+		register int until = c.size();
+			
+		for (register int j = 0; j < until; ++j) {
+			Particle* lhs = c[j];
+			for (register int k = j + 1; k < until; ++k) {
+				Particle* rhs = c[k];
 
+				float kernel = polynomialKernel(lhs->position - rhs->position, CELL_SIZE, KernelFunctionType::Default);
+				lhs->massDensity += PARTICLE_MASS * kernel;
+				rhs->massDensity += PARTICLE_MASS * kernel;
+			}
+
+			register int neighborCount = cellNeighborIndex[i][0];
+			memcpy(neighbor, cellNeighborIndex[i], sizeof(int) * (neighborCount + 1));
+
+			for (register int k = 1; k <= neighborCount; k++) {
+				Cell& neighborCell = cellContainer[neighbor[k]];
+
+				for (Particle* rhs : neighborCell) {
+					float kernel = polynomialKernel(lhs->position - rhs->position, CELL_SIZE, KernelFunctionType::Default);
+					lhs->massDensity += PARTICLE_MASS * kernel;
+					rhs->massDensity += PARTICLE_MASS * kernel;
+				}
+			}
+		}
 	}
 }
 
-float Simulator::KernelFunction(float r, float h)
+float Simulator::polynomialKernel(const vec3 & r, float h, KernelFunctionType type)
 {
-	if (abs(r) > h) {
-		return 0.0f;
-	}
-
-	return ((315.0f / 64 * PI) / powf(h, 9)) * powf(h * h - r * r, 3);
-}
-
-float Simulator::GradientKernelFunction(float r, float h)
-{
-	float h2_r2 = h * h - r * r;
-
-	return ((-945.0f / 32.0f * PI) / powf(h, 9)) * h2_r2 * h2_r2;
-}
-
-float Simulator::LaplacianKernelFunction(float r, float h)
-{
+	float r2 = r.x * r.x + r.y * r.y;
 	float h2 = h * h;
-	float r2 = r * r;
 
-	return ((-945.0f / 32.0f * PI) / powf(h, 9)) * (h2 - r2) * (3 * h2 - 7 * r2);
+	switch (type) {
+	case KernelFunctionType::Default :	
+		if (r2 > h2) {
+			return 0.0f;
+		}
+		return (315.0f / (64.0f * PI)) * (powf(h2 - r2, 3) / powf(h, 9));
+	case KernelFunctionType::Gradient :
+		return (-945.0f / (32.0f * PI)) * sqrt(r2) * (powf(h2 - r2, 2) / powf(h, 9));
+	case KernelFunctionType::Laplacian :
+		return (-945.0f / (32.0f * PI)) * (h2 - r2) * (3 * h2 - 7 * r2) / powf(h, 9);
+	}
+	
+	return 0.0f;
 }
 
+float Simulator::spikyKernel(const vec3 & r, float h, KernelFunctionType type)
+{
+	float abs_r = sqrt(r.x * r.x + r.y * r.y);
+	float a;
+	float b;
+
+	switch (type) {
+	case KernelFunctionType::Default:
+		if (abs_r > h) {
+			return 0.0f;
+		}
+		a = 15.0f / PI;
+		b = powf(h - abs_r, 3) / powf(h, 6);
+		return a * b;
+	case KernelFunctionType::Gradient:
+		return (-45.0f / PI) / powf(h, 6);
+	case KernelFunctionType::Laplacian:
+		a = (-90.0f / PI) / abs_r;
+		return a * (h - abs_r) * (h - 2 * abs_r);
+	}
+
+	return 0.0f;
+}
+
+float Simulator::viscosityKernel(const vec3 & r, float h, KernelFunctionType type)
+{
+	float abs_r = sqrt(r.x * r.x + r.y * r.y);
+	float r_h;
+	float a;
+
+	switch (type) {
+	case KernelFunctionType::Default:
+		r_h = abs_r / h;
+		a = 15.0f / (2.0f * PI);
+		return a / powf(h, 3) * (-0.5f * powf(r_h, 3) + powf(r_h, 2) + 0.5f / r_h - 1.0f);
+	case KernelFunctionType::Gradient:
+		a = abs_r * 15.0f / (2.0f * PI);
+		return a / powf(h, 3) * (-1.5f * abs_r / powf(h, 3) + 2.0f / powf(h, 2) - 0.5f * h / powf(abs_r, 3));
+	case KernelFunctionType::Laplacian:
+		return (45.0f / PI) * (h - abs_r) / powf(h, 6);
+	}
+
+	return 0.0f;
+}
