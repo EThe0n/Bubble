@@ -138,7 +138,7 @@ void Simulator::simulate(float deltaTime)
 		vec3 totalForce = p.gravity + p.pressure + p.viscosity + p.surface;
 		vec3 accel = totalForce / p.massDensity;
 
-		p.speed += accel * deltaTime;
+		p.speed += accel * deltaTime * 100.0f;
 	}
 
 	for (int i = 0; i < MAX_PARTICLE; i++) {
@@ -281,6 +281,18 @@ void Simulator::collisionHandling(int cellIndex)
 
 			float d = glm::length(lhs.position - rhs.position);
 
+			if (d <= 0.0f) {
+				float speed = rhs.speed.x * rhs.speed.x + rhs.speed.y * rhs.speed.y;
+				vec3 n;
+				if (speed >= 0) {
+					n = vec3(0, 1, 0);
+				}
+				else {
+					n = -glm::normalize(rhs.speed);
+				}
+				rhs.position += RADIUS * n;
+				rhs.speed = rhs.speed - glm::dot(rhs.speed, n) * n;
+			}
 			if (d > 0.0f && d < 2.0f * RADIUS) {
 				vec3 n = glm::normalize(rhs.position - lhs.position);
 
@@ -314,105 +326,6 @@ void Simulator::collisionHandling(int cellIndex)
 
 void Simulator::calcMassDensity()
 {
-	const int nCell = cellContainer.size();
-	
-	for (register int i = 0; i < MAX_PARTICLE; ++i) {
-		particleContainer[i].massDensity = REST_DENSITY;
-	}
 
-	int neighbor[5] = { 0 };
-	
-	for (register int i = 0; i < nCell; ++i) {
-		Cell& c = cellContainer[i];
-		register int until = c.size();
-			
-		for (register int j = 0; j < until; ++j) {
-			Particle* lhs = c[j];
-			for (register int k = j + 1; k < until; ++k) {
-				Particle* rhs = c[k];
 
-				float kernel = polynomialKernel(lhs->position - rhs->position, CELL_SIZE, KernelFunctionType::Default);
-				lhs->massDensity += PARTICLE_MASS * kernel;
-				rhs->massDensity += PARTICLE_MASS * kernel;
-			}
-
-			register int neighborCount = cellNeighborIndex[i][0];
-			memcpy(neighbor, cellNeighborIndex[i], sizeof(int) * (neighborCount + 1));
-
-			for (register int k = 1; k <= neighborCount; k++) {
-				Cell& neighborCell = cellContainer[neighbor[k]];
-
-				for (Particle* rhs : neighborCell) {
-					float kernel = polynomialKernel(lhs->position - rhs->position, CELL_SIZE, KernelFunctionType::Default);
-					lhs->massDensity += PARTICLE_MASS * kernel;
-					rhs->massDensity += PARTICLE_MASS * kernel;
-				}
-			}
-		}
-	}
-}
-
-float Simulator::polynomialKernel(const vec3 & r, float h, KernelFunctionType type)
-{
-	float r2 = r.x * r.x + r.y * r.y;
-	float h2 = h * h;
-
-	switch (type) {
-	case KernelFunctionType::Default :	
-		if (r2 > h2) {
-			return 0.0f;
-		}
-		return (315.0f / (64.0f * PI)) * (powf(h2 - r2, 3) / powf(h, 9));
-	case KernelFunctionType::Gradient :
-		return (-945.0f / (32.0f * PI)) * sqrt(r2) * (powf(h2 - r2, 2) / powf(h, 9));
-	case KernelFunctionType::Laplacian :
-		return (-945.0f / (32.0f * PI)) * (h2 - r2) * (3 * h2 - 7 * r2) / powf(h, 9);
-	}
-	
-	return 0.0f;
-}
-
-float Simulator::spikyKernel(const vec3 & r, float h, KernelFunctionType type)
-{
-	float abs_r = sqrt(r.x * r.x + r.y * r.y);
-	float a;
-	float b;
-
-	switch (type) {
-	case KernelFunctionType::Default:
-		if (abs_r > h) {
-			return 0.0f;
-		}
-		a = 15.0f / PI;
-		b = powf(h - abs_r, 3) / powf(h, 6);
-		return a * b;
-	case KernelFunctionType::Gradient:
-		return (-45.0f / PI) / powf(h, 6);
-	case KernelFunctionType::Laplacian:
-		a = (-90.0f / PI) / abs_r;
-		return a * (h - abs_r) * (h - 2 * abs_r);
-	}
-
-	return 0.0f;
-}
-
-float Simulator::viscosityKernel(const vec3 & r, float h, KernelFunctionType type)
-{
-	float abs_r = sqrt(r.x * r.x + r.y * r.y);
-	float r_h;
-	float a;
-
-	switch (type) {
-	case KernelFunctionType::Default:
-		r_h = abs_r / h;
-		a = 15.0f / (2.0f * PI);
-		return a / powf(h, 3) * (-0.5f * powf(r_h, 3) + powf(r_h, 2) + 0.5f / r_h - 1.0f);
-	case KernelFunctionType::Gradient:
-		a = abs_r * 15.0f / (2.0f * PI);
-		return a / powf(h, 3) * (-1.5f * abs_r / powf(h, 3) + 2.0f / powf(h, 2) - 0.5f * h / powf(abs_r, 3));
-	case KernelFunctionType::Laplacian:
-		return (45.0f / PI) * (h - abs_r) / powf(h, 6);
-	}
-
-	return 0.0f;
 }
