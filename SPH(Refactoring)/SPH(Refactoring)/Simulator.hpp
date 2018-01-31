@@ -4,6 +4,7 @@
 #pragma comment(lib, "glew32.lib")
 
 #include "Particle.hpp"
+#include "Grid.h"
 
 class Simulator
 {
@@ -11,19 +12,11 @@ public :
 	Simulator();
 	~Simulator();
 
+	void render(GLuint channel);
+	void update();
+
 private :
-	Particle* particles;
-
-	static GLfloat	vertexBufferData[8];
-	GLfloat*		dev_particlePositionSizeData;
-	GLuint			vertexArrayID;
-	GLuint			billboardVertexBuffer;
-	GLuint			particlePositionBuffer;
+	Particle*	particles;
+	Grid*		grid;
 };
 
-GLfloat Simulator::vertexBufferData[8] = {
-	-0.5f, -0.5f,
-	0.5f, -0.5f,
-	-0.5f,  0.5f,
-	0.5f,  0.5f
-};
