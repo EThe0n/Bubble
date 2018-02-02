@@ -63,8 +63,9 @@ int main()
 	// texture - fragment
 	GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
 	GLuint texture = loadDDS("particle.DDS");
-	Simulator* simulator;
 	Camera camera = Camera(vec3((GRID_X_COUNT * CELL_SIZE) * 0.5f, (GRID_X_COUNT * CELL_SIZE) * 0.5f, (GRID_X_COUNT * CELL_SIZE) * 1.5));
+	Simulator* simulator = nullptr;
+
 	try {
 		simulator = new Simulator();
 	}
@@ -95,7 +96,8 @@ int main()
 		mat4 mvp = camera.getProjection() * camera.getView();
 
 		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, &mvp[0][0]);
-		simulator->render(channel);
+		simulator->update();
+		simulator->render(channel, particleSize);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

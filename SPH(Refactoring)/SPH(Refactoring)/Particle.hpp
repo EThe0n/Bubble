@@ -9,8 +9,10 @@ public:
 	Particle(int _ParticleNumber, float _Radius);
 	~Particle();
 
-	void render();
+	void render(GLuint particleSize);
 	void update();
+	void initRandom(float xMax, float yMax);
+	void initSorted(float xMax, float yMax);
 
 public : 
 	float*	position;
@@ -28,8 +30,7 @@ public :
 	GLuint			vertexArrayID;
 	GLuint			billboardVertexBuffer;
 	GLuint			particlePositionBuffer;
-
+	GLuint			uniformParticleSize;
 private :
-	void initRandom(float xMax, float yMax);
-	void initSorted(float xMax, float yMax);
+
 };

@@ -40,12 +40,12 @@ void Camera::computeMatricesFromInputs(GLFWwindow * window)
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		position -= direction * deltaTime * speed;
 	}
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		position += right * deltaTime * speed;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		position -= right * deltaTime * speed;
-	}
+	//if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+	//	position += right * deltaTime * speed;
+	//}
+	//if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+	//	position -= right * deltaTime * speed;
+	//}
 
 	float FoV = initialFoV;
 

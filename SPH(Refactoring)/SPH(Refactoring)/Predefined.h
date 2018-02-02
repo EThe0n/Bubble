@@ -3,10 +3,14 @@
 #define WINDOW_WIDTH	1024
 #define WINDOW_HEIGHT	768
 
-// Grid option
+// Grid Option
 #define GRID_X_COUNT	10
 #define GRID_Y_COUNT	10
-#define CELL_SIZE		0.1f
+#define CELL_SIZE		0.0457f
+
+// Particle Option
+#define PARTICLE_NUMBER 10
+#define PARTICLE_RADIUS	0.00608f
 
 // MODE
 #define _DEBUG

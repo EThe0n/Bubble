@@ -13,7 +13,7 @@ public:
 private:
 	GLfloat*	dev_vertexData;
 	
-	GLuint vao;
-	GLuint vertexBuffer;
-	GLuint vertexCount;
+	GLuint		vao;
+	GLuint		vertexBuffer;
+	GLuint		vertexCount;
 };

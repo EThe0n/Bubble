@@ -19,8 +19,8 @@ void main()
 
 		vec3 vertexPosition_worldspace =
 			particleCenter_worldSpace
-			+ (1.0f, 0.0f, 0.0f) * vertex.x * particleSize
-			+ (0.0f, 1.0f, 0.0f) * vertex.y * particleSize;
+			+ vec3(1.0f, 0.0f, 0.0f) * vertex.x * particleSize
+			+ vec3(0.0f, 1.0f, 0.0f) * vertex.y * particleSize;
 
 		// Output position of the vertex
 		gl_Position = MVP * vec4(vertexPosition_worldspace, 1.0f);

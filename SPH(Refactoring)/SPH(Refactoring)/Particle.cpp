@@ -13,7 +13,7 @@ GLfloat Particle::vertexBufferData[8] = {
 
 Particle::Particle(int _ParticleNumber, float _Radius)
 {
-	if (particleNumber <= 0) {
+	if (_ParticleNumber <= 0) {
 		throw std::exception("invalid number of particles");
 	}
 	if (_Radius <= 0.0f) {
@@ -41,10 +41,8 @@ Particle::Particle(int _ParticleNumber, float _Radius)
 	memset(viscosity, 0, bytes_2);
 	memset(surface, 0, bytes_2);
 	memset(massDensity, 0, bytes);
-
+	
 	// Rendering setting
-	dev_particlePositionSizeData = new GLfloat[arraySize];
-
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
 
@@ -69,14 +67,15 @@ Particle::~Particle()
 	delete surface;
 	delete massDensity;
 
-	delete dev_particlePositionSizeData;
 	glDeleteBuffers(1, &particlePositionBuffer);
 	glDeleteBuffers(1, &billboardVertexBuffer);
 	glDeleteVertexArrays(1, &vertexArrayID);
 }
 
-void Particle::render()
+void Particle::render(GLuint particleSize)
 {
+	glUniform1f(particleSize, size);
+
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, billboardVertexBuffer);
@@ -113,7 +112,7 @@ void Particle::render()
 								 // This is equivalent to :
 								 // for(i in ParticlesCount) : glDrawArrays(GL_TRIANGLE_STRIP, 0, 4), 
 								 // but faster!
-	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 2, particleNumber);
+	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, particleNumber);
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
@@ -125,7 +124,7 @@ void Particle::update()
 
 	glBindBuffer(GL_ARRAY_BUFFER, particlePositionBuffer);
 	glBufferData(GL_ARRAY_BUFFER, arraySize * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
-	glBufferSubData(GL_ARRAY_BUFFER, 0, arraySize * sizeof(GLfloat), dev_particlePositionSizeData);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, arraySize * sizeof(GLfloat), position);
 }
 
 void Particle::initRandom(float xMax, float yMax)

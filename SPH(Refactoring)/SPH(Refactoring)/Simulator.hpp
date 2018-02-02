@@ -12,7 +12,7 @@ public :
 	Simulator();
 	~Simulator();
 
-	void render(GLuint channel);
+	void render(GLuint channel, GLuint particleSize);
 	void update();
 
 private :

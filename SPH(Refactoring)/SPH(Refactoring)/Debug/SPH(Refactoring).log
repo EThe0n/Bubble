@@ -1,5 +1,0 @@
-﻿  main.cpp
-d:\workspace\bubble\sph(refactoring)\sph(refactoring)\predefined.h(12): warning C4005: '_DEBUG': 매크로 재정의
-  d:\workspace\bubble\sph(refactoring)\sph(refactoring)\predefined.h(12): note: 명령줄 인수: '_DEBUG'의 이전 정의를 참조하십시오.
-  SPH(Refactoring).vcxproj -> D:\workspace\Bubble\SPH(Refactoring)\Debug\SPH(Refactoring).exe
-  SPH(Refactoring).vcxproj -> D:\workspace\Bubble\SPH(Refactoring)\Debug\SPH(Refactoring).pdb (Partial PDB)
