@@ -61,8 +61,6 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		printf("%s\n", &VertexShaderErrorMessage[0]);
 	}
 
-
-
 	// Compile Fragment Shader
 	printf("Compiling shader : %s\n", fragment_file_path);
 	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
@@ -77,8 +75,6 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
 		printf("%s\n", &FragmentShaderErrorMessage[0]);
 	}
-
-
 
 	// Link the program
 	printf("Linking program\n");

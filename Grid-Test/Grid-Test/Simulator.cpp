@@ -146,10 +146,10 @@ void Simulator::simulate(float deltaTime)
 		p.position += p.speed * (float)deltaTime * 100.0f; // meter to centimeter
 	}
 
-	// object collision handling
-	for (int i = 0; i < NUM_CELL; i++) {
-		collisionHandling(i);
-	}
+	//// object collision handling
+	//for (int i = 0; i < NUM_CELL; i++) {
+	//	collisionHandling(i);
+	//}
 
 	// boundary collsiion handling
 	for (int i = 0; i < MAX_PARTICLE; i++) {

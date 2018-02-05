@@ -3,6 +3,10 @@
 #include <exception>
 #include <memory>
 #include <random>
+#include <algorithm>
+
+using std::max;
+using std::min;
 
 GLfloat Particle::vertexBufferData[8] = {
 	-0.5f, -0.5f,
@@ -127,6 +131,21 @@ void Particle::update()
 	glBufferSubData(GL_ARRAY_BUFFER, 0, arraySize * sizeof(GLfloat), position);
 }
 
+void Particle::simulate(float deltaTime)
+{
+	register int idx = 0;
+	
+	for (register int i = 0; i < particleNumber; ++i) {
+		idx = i * 2 + 1;
+		speed[idx] -= 9.81f * deltaTime;
+	}
+
+	for (register int i = 0; i < particleNumber; ++i) {
+		idx = i * 2 + 1;
+		position[idx] += speed[idx] * deltaTime;
+	}
+}
+
 void Particle::initRandom(float xMax, float yMax)
 {
 	register int idx = 0;
@@ -145,4 +164,55 @@ void Particle::initRandom(float xMax, float yMax)
 void Particle::initSorted(float xMax, float yMax)
 {
 
+}
+
+void Particle::boundCollision(float xMax, float yMax, float restitution)
+{
+	register int x = 0;
+	register int y = 0;
+	register float normal[2] = { 0.0f };
+	register float length = 0.0f;
+	register float coef = 0.0f;
+
+ 	xMax -= radius;
+	yMax -= radius;
+
+	for (register int i = 0; i < particleNumber; ++i) {
+		memset(normal, 0, sizeof(float) * 2);
+		x = i * 2;
+		y = x + 1;
+
+		// x axis bounding check
+		if (position[x] < radius) {
+			normal[0] += 1.0f;
+			position[x] = radius;
+		}
+		else if (position[x] > xMax) {
+			normal[0] -= 1.0f;
+			position[x] = xMax;
+		}
+
+		// y axis bounding check
+		if (position[y] < radius) {
+			normal[1] += 1.0f;
+			position[y] = radius;
+		}
+		else if (position[y] > yMax) {
+			normal[1] -= 1.0f;
+			position[y] = yMax;
+		}
+
+		// calculate force
+		register float length = sqrt(normal[0] * normal[0] + normal[1] * normal[1]);
+		if (length > 1.0f) {
+			normal[0] /= length; 
+			normal[1] /= length;
+		}
+
+		if (length >= 1.0f) {
+			coef = (1.0f + restitution) * (speed[x] * normal[0] + speed[y] * normal[1]);
+			speed[x] = speed[x] - coef * normal[0];
+			speed[y] = speed[y] - coef * normal[1];
+		}
+	}
 }

@@ -96,6 +96,8 @@ int main()
 		mat4 mvp = camera.getProjection() * camera.getView();
 
 		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, &mvp[0][0]);
+
+		simulator->simulate(delta);
 		simulator->update();
 		simulator->render(channel, particleSize);
 

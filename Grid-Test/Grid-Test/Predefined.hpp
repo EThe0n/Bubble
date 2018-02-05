@@ -45,4 +45,4 @@
 
 #define REST_DENSITY	998.29f
 #define GAS_STIFFNESS	3
-#define RESTITUTION		0
+#define RESTITUTION		1.0f

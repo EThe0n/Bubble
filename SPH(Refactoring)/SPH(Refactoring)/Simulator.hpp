@@ -14,6 +14,7 @@ public :
 
 	void render(GLuint channel, GLuint particleSize);
 	void update();
+	void simulate(float deltaTime);
 
 private :
 	Particle*	particles;

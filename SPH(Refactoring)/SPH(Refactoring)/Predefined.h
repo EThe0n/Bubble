@@ -4,16 +4,19 @@
 #define WINDOW_HEIGHT	768
 
 // Grid Option
-#define GRID_X_COUNT	10
-#define GRID_Y_COUNT	10
+#define GRID_X_COUNT	30
+#define GRID_Y_COUNT	30
 #define CELL_SIZE		0.0457f
 
 // Particle Option
-#define PARTICLE_NUMBER 10
-#define PARTICLE_RADIUS	0.00608f
+#define PARTICLE_NUMBER			5000
+#define PARTICLE_RADIUS			0.00608f
+#define PARTICLE_REST_DENSITY	998.29f
+#define PARTICLE_MASS			0.02f 
+#define RESTITUTION				0.0f
 
 // MODE
-#define _DEBUG
+//#define _DEBUG
 //#define NDEBUG
 
 // CHANNEL - VERTEX, FRAGMENT

@@ -33,3 +33,9 @@ void Simulator::update()
 {
 	particles->update();
 }
+
+void Simulator::simulate(float deltaTime)
+{
+	particles->simulate(deltaTime);
+	particles->boundCollision(CELL_SIZE * GRID_X_COUNT, CELL_SIZE * GRID_Y_COUNT, RESTITUTION);
+}
