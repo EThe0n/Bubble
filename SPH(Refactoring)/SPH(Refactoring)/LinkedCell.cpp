@@ -25,7 +25,7 @@ LinkedCell::LinkedCell(int particleNumber, float width, int xCount, int yCount) 
 	tempParticleIndex	= new int[particleNumber + 1];
 	cellIndex			= new int[particleNumber + 1];
 	tempCellIndex		= new int[particleNumber + 1];
-	cellStartIndex		= new int[cellNumber];
+	cellStartIndex		= new int[cellNumber + 1];
 
 	for (register int i = 1; i <= particleNumber; ++i) {
 		particleIndex[i] = i - 1;
@@ -75,7 +75,7 @@ void LinkedCell::update(float* position)
 	register int x, y;
 	register int idx;
 
-	memset(cellStartIndex, 0, sizeof(int) * cellNumber);
+	memset(cellStartIndex, 0, sizeof(int) * (cellNumber + 1));
 	for (register int i = 1; i <= particleNumber; ++i) {
 		x = particleIndex[i] * 2;
 		y = x + 1;
@@ -103,6 +103,7 @@ void LinkedCell::update(float* position)
 		cellStartIndex[i] = cellStartIndex[i - 1] + temp;
 		temp = prev;
 	}
+	cellStartIndex[cellNumber] = cellNumber;
 }
 
 void LinkedCell::initNeighborCellIndex()

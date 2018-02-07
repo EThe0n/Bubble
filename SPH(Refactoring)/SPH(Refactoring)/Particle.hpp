@@ -15,6 +15,7 @@ public:
 	void update();
 	void simulate(float deltaTime);
 	void boundCollision(float xMax, float yMax, float restitution);
+	void collisionHandling(int cellNumber);
 	void initRandom(float xMax, float yMax);
 	void initSorted(float xMax, float yMax);
 	
@@ -38,5 +39,5 @@ private :
 	GLuint			uniformParticleSize;
 
 private :
-	
+	void particleCollision(int lhsIndex, int rhsIndex);
 };

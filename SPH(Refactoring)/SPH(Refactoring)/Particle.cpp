@@ -170,6 +170,11 @@ void Particle::initSorted(float xMax, float yMax)
 
 }
 
+void Particle::particleCollision(int lhsIndex, int rhsIndex)
+{
+
+}
+
 void Particle::boundCollision(float xMax, float yMax, float restitution)
 {
 	register int x = 0;
@@ -217,6 +222,37 @@ void Particle::boundCollision(float xMax, float yMax, float restitution)
 			coef = (1.0f + restitution) * (speed[x] * normal[0] + speed[y] * normal[1]);
 			speed[x] = speed[x] - coef * normal[0];
 			speed[y] = speed[y] - coef * normal[1];
+		}
+	}
+}
+
+void Particle::collisionHandling(int cellNumber)
+{
+	register int neighbor[5];
+	register int neighborCount;
+	register int until;
+	register int pIdx;
+	
+	for (register int cellIdx = 0; cellIdx < cellNumber; ++cellIdx) {
+		until = linkedCell->cellStartIndex[cellIdx + 1];
+		neighborCount = linkedCell->neighborCellSize[cellIdx];
+		memcpy(neighbor, linkedCell->neighborCellIndex[cellIdx], sizeof(int) * neighborCount);
+		neighbor[neighborCount] = neighbor[neighborCount - 1] + 1;
+
+		for (register int i = linkedCell->cellStartIndex[cellIdx]; i < until; ++i) {
+			pIdx = linkedCell->particleIndex[i];
+
+			// same cell collision check
+			for (register int j = i + 1; j < until; ++j) {
+				particleCollision(pIdx, linkedCell->particleIndex[j]);
+			}
+			
+			// neighbor cells collision check 
+			for (register int n = 0; n < neighborCount; ++n) {
+				for (register int j = linkedCell->cellStartIndex[neighbor[n]]; j < linkedCell->cellStartIndex[neighbor[n + 1]]; ++j) {
+					particleCollision(pIdx, linkedCell->particleIndex[j]);
+				}
+			}
 		}
 	}
 }
