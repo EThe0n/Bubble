@@ -5,6 +5,7 @@
 
 #include "Particle.hpp"
 #include "Grid.h"
+#include "LinkedCell.h"
 
 class Simulator
 {

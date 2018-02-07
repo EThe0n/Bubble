@@ -15,17 +15,18 @@ GLfloat Particle::vertexBufferData[8] = {
 	0.5f,  0.5f
 };
 
-Particle::Particle(int _ParticleNumber, float _Radius)
+Particle::Particle(int _ParticleNumber, float _Radius, LinkedCell* cell = nullptr) :
+	particleNumber(_ParticleNumber), radius(_Radius), linkedCell(cell)
 {
+	if (cell == nullptr) {
+		throw std::exception("invalid linked cell");
+	}
 	if (_ParticleNumber <= 0) {
 		throw std::exception("invalid number of particles");
 	}
 	if (_Radius <= 0.0f) {
 		throw std::exception("invalid radius of particle");
 	}
-
-	particleNumber = _ParticleNumber;
-	radius = _Radius;
 	size = 2.5f * radius;
 
 	register int arraySize = particleNumber * 2;
@@ -70,6 +71,7 @@ Particle::~Particle()
 	delete viscosity;
 	delete surface;
 	delete massDensity;
+	delete linkedCell;
 
 	glDeleteBuffers(1, &particlePositionBuffer);
 	glDeleteBuffers(1, &billboardVertexBuffer);
@@ -129,6 +131,8 @@ void Particle::update()
 	glBindBuffer(GL_ARRAY_BUFFER, particlePositionBuffer);
 	glBufferData(GL_ARRAY_BUFFER, arraySize * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
 	glBufferSubData(GL_ARRAY_BUFFER, 0, arraySize * sizeof(GLfloat), position);
+
+	linkedCell->update(position);
 }
 
 void Particle::simulate(float deltaTime)

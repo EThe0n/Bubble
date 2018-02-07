@@ -3,9 +3,12 @@
 #include <exception>
 #include <memory>
 
-LinkedCell::LinkedCell(float width, int xCount, int yCount) :
-	width(width), xCount(xCount), yCount(yCount)
+LinkedCell::LinkedCell(int particleNumber, float width, int xCount, int yCount) :
+	particleNumber(particleNumber), width(width), xCount(xCount), yCount(yCount)
 {
+	if (particleNumber <= 0) {
+		throw std::exception("Linked Cell> invalid particle number");
+	}
 	if (width <= 0.0f) {
 		throw std::exception("Linked Cell> invalid cell width");
 	}
@@ -14,16 +17,20 @@ LinkedCell::LinkedCell(float width, int xCount, int yCount) :
 	}
 
 	cellNumber = xCount * yCount;
-
-	register int bytes = sizeof(int) * cellNumber;
+	digit = (int)log10(cellNumber) + 1;
 
 	neighborCellIndex	= new int*[cellNumber];
 	neighborCellSize	= new int[cellNumber];
-	particleIndex		= new int*[cellNumber];
-	particleIndexSize	= new int[cellNumber];
-	
-	memset(neighborCellSize, 0, bytes);
-	memset(particleIndexSize, 0, bytes);
+	particleIndex		= new int[particleNumber + 1];
+	tempParticleIndex	= new int[particleNumber + 1];
+	cellIndex			= new int[particleNumber + 1];
+	tempCellIndex		= new int[particleNumber + 1];
+	cellStartIndex		= new int[cellNumber];
+
+	for (register int i = 1; i <= particleNumber; ++i) {
+		particleIndex[i] = i - 1;
+	}
+	memset(cellIndex, 0, sizeof(int) * (particleNumber + 1));
 
 	initNeighborCellIndex();
 }
@@ -31,16 +38,18 @@ LinkedCell::LinkedCell(float width, int xCount, int yCount) :
 LinkedCell::~LinkedCell()
 {
 	for (register int i = 0; i < cellNumber; ++i) {
-		delete neighborCellIndex[i];
-		delete particleIndex[i];
+		delete[] neighborCellIndex[i];
 	}
-	delete neighborCellIndex;
-	delete neighborCellSize;
-	delete particleIndex;
-	delete particleIndexSize;
+	delete[] neighborCellIndex;
+	delete[] neighborCellSize;
+	delete[] particleIndex;
+	delete[] tempParticleIndex;
+	delete[] cellIndex;
+	delete[] tempCellIndex;
+	delete[] cellStartIndex;
 }
 
-inline int LinkedCell::getIdx(float x, float y)
+int LinkedCell::getIdx(float x, float y)
 {
 	unsigned int x_idx = x / width;
 	unsigned int y_idx = y / width;
@@ -58,10 +67,42 @@ void LinkedCell::clear()
 		throw std::exception("Linked Cell> invalid number of cells");
 	}
 
-	for (register int i = 0; i < cellNumber; ++i) {
-		delete particleIndex[i];
+
+}
+
+void LinkedCell::update(float* position)
+{
+	register int x, y;
+	register int idx;
+
+	memset(cellStartIndex, 0, sizeof(int) * cellNumber);
+	for (register int i = 1; i <= particleNumber; ++i) {
+		x = particleIndex[i] * 2;
+		y = x + 1;
+
+		try {
+			idx = getIdx(position[x], position[y]);
+		}
+		catch (std::exception e) {
+			throw e.what();
+		}
+
+		cellIndex[i] = idx;
+		cellStartIndex[idx]++;
 	}
-	memset(particleIndexSize, 0, sizeof(int) * cellNumber);
+
+	// cell index에 대해서 정렬
+	radixSort();
+
+	// cell start index 구하기
+	register int temp = cellStartIndex[0];
+	register int prev;
+	cellStartIndex[0] = 1;
+	for (register int i = 1; i < cellNumber; ++i) {
+		prev = cellStartIndex[i];
+		cellStartIndex[i] = cellStartIndex[i - 1] + temp;
+		temp = prev;
+	}
 }
 
 void LinkedCell::initNeighborCellIndex()
@@ -91,4 +132,41 @@ void LinkedCell::initNeighborCellIndex()
 			memcpy(neighborCellIndex[idx], index, sizeof(int) * count);
 		}
 	}
+}
+
+void LinkedCell::radixSort()
+{
+	for (register int i = 1; i <= digit; ++i) {
+		countingSort(i);
+	}
+}
+
+void LinkedCell::countingSort(int point)
+{
+	int c[10] = { 0 };
+	const int bytes = sizeof(int) * (particleNumber + 1);
+	register int mod = 1;
+	while (point--) {
+		mod *= 10;
+	}
+	register int div = mod / 10;
+
+	memset(tempParticleIndex, 0, bytes);
+	memset(tempCellIndex, 0, bytes);
+
+	for (register int i = 1; i <= particleNumber; ++i) {
+		c[cellIndex[i] % mod / div]++;
+	}
+	for (register int i = 1; i <= 9; ++i) {
+		c[i] += c[i - 1];
+	}
+	register int idx;
+	for (register int i = particleNumber; i >= 1; --i) {
+		idx = c[cellIndex[i] % mod / div]--;
+		tempCellIndex[idx] = cellIndex[i];
+		tempParticleIndex[idx] = particleIndex[i];
+	}
+
+	memcpy(particleIndex, tempParticleIndex, bytes);
+	memcpy(cellIndex, tempCellIndex, bytes);
 }
