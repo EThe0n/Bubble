@@ -19,13 +19,14 @@ LinkedCell::LinkedCell(int particleNumber, float width, int xCount, int yCount) 
 	cellNumber = xCount * yCount;
 	digit = (int)log10(cellNumber) + 1;
 
-	neighborCellIndex	= new int*[cellNumber];
-	neighborCellSize	= new int[cellNumber];
-	particleIndex		= new int[particleNumber + 1];
-	tempParticleIndex	= new int[particleNumber + 1];
-	cellIndex			= new int[particleNumber + 1];
-	tempCellIndex		= new int[particleNumber + 1];
-	cellStartIndex		= new int[cellNumber + 1];
+	neighborCellIndex		= new int*[cellNumber];
+	neighborCellSize		= new int[cellNumber];
+	particleIndex			= new int[particleNumber + 1];
+	tempParticleIndex		= new int[particleNumber + 1];
+	cellIndex				= new int[particleNumber + 1];
+	tempCellIndex			= new int[particleNumber + 1];
+	cellStartIndex			= new int[cellNumber];
+	particleNumberInCell	= new int[cellNumber];
 
 	for (register int i = 1; i <= particleNumber; ++i) {
 		particleIndex[i] = i - 1;
@@ -47,6 +48,7 @@ LinkedCell::~LinkedCell()
 	delete[] cellIndex;
 	delete[] tempCellIndex;
 	delete[] cellStartIndex;
+	delete[] particleNumberInCell;
 }
 
 int LinkedCell::getIdx(float x, float y)
@@ -75,7 +77,9 @@ void LinkedCell::update(float* position)
 	register int x, y;
 	register int idx;
 
-	memset(cellStartIndex, 0, sizeof(int) * (cellNumber + 1));
+	memset(particleNumberInCell, 0, sizeof(int) * cellNumber);
+	memset(cellStartIndex, 0, sizeof(int) * cellNumber);
+
 	for (register int i = 1; i <= particleNumber; ++i) {
 		x = particleIndex[i] * 2;
 		y = x + 1;
@@ -83,27 +87,25 @@ void LinkedCell::update(float* position)
 		try {
 			idx = getIdx(position[x], position[y]);
 		}
-		catch (std::exception e) {
+		catch (std::exception& e) {
 			throw e.what();
 		}
 
 		cellIndex[i] = idx;
-		cellStartIndex[idx]++;
+		particleNumberInCell[idx]++;
 	}
 
 	// cell index에 대해서 정렬
 	radixSort();
 
 	// cell start index 구하기
-	register int temp = cellStartIndex[0];
-	register int prev;
-	cellStartIndex[0] = 1;
-	for (register int i = 1; i < cellNumber; ++i) {
-		prev = cellStartIndex[i];
-		cellStartIndex[i] = cellStartIndex[i - 1] + temp;
-		temp = prev;
+	register int iter = 1;
+	for (register int i = 0; i < cellNumber; ++i) {
+		if (particleNumberInCell[i] != 0) {
+			cellStartIndex[i] = iter;
+			iter += particleNumberInCell[i];
+		}
 	}
-	cellStartIndex[cellNumber] = cellNumber;
 }
 
 void LinkedCell::initNeighborCellIndex()
@@ -122,7 +124,7 @@ void LinkedCell::initNeighborCellIndex()
 				register unsigned int _x = x + offsetX[i];
 				register unsigned int _y = y + offsetY[i];
 
-				if (_x < xCount || _y < yCount) {
+				if (_x < xCount && _y < yCount) {
 					index[count] = _y * xCount + _x;
 					++count;
 				}

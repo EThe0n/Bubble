@@ -28,7 +28,7 @@ Particle::Particle(int _ParticleNumber, float _Radius, LinkedCell* cell = nullpt
 		throw std::exception("invalid radius of particle");
 	}
 	size = 2.5f * radius;
-
+	
 	register int arraySize = particleNumber * 2;
 	position	= new float[arraySize];
 	speed		= new float[arraySize];
@@ -132,7 +132,12 @@ void Particle::update()
 	glBufferData(GL_ARRAY_BUFFER, arraySize * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
 	glBufferSubData(GL_ARRAY_BUFFER, 0, arraySize * sizeof(GLfloat), position);
 
-	linkedCell->update(position);
+	try {
+		linkedCell->update(position);
+	}
+	catch (std::exception& e) {
+		throw e.what();
+	}
 }
 
 void Particle::simulate(float deltaTime)
@@ -144,9 +149,14 @@ void Particle::simulate(float deltaTime)
 		speed[idx] -= 9.81f * deltaTime;
 	}
 
+	register int x;
+	register int y;
 	for (register int i = 0; i < particleNumber; ++i) {
-		idx = i * 2 + 1;
-		position[idx] += speed[idx] * deltaTime;
+		x = i * 2;
+		y = x + 1;
+
+		position[x] += speed[x] * deltaTime;
+		position[y] += speed[y] * deltaTime;
 	}
 }
 
@@ -172,7 +182,52 @@ void Particle::initSorted(float xMax, float yMax)
 
 void Particle::particleCollision(int lhsIndex, int rhsIndex)
 {
+	register int lhs_x = lhsIndex * 2;
+	register int lhs_y = lhs_x + 1;
+	register int rhs_x = rhsIndex * 2;
+	register int rhs_y = rhs_x + 1;
 
+	float dx = position[lhs_x] - position[rhs_x];
+	float dy = position[lhs_y] - position[rhs_y];
+	float distance = dx * dx + dy * dy;
+	float detect = distance - radius * radius;
+	float normal[2];
+	float d;
+	float dot;
+	float dv[2];
+	int sig;
+
+	if (detect <= 0.0f) {
+		// get normal vector
+		sig = (detect > 0) - (detect < 0);
+		if (distance == 0.0f) {
+			dx = -speed[rhs_x];
+			dy = -speed[rhs_y];
+			distance = sqrtf(dx * dx + dy * dy);
+			normal[0] = dx / distance;
+			normal[1] = dy / distance;
+			d = 2.0f * radius;
+		}
+		else {
+			distance = sqrtf(distance);
+			normal[0] = sig * -dx / distance;
+			normal[1] = sig * -dy / distance;
+			d = 2.0f * radius - distance;
+		}
+
+		// move to collision point
+		position[rhs_x] += normal[0] * d;
+		position[rhs_y] += normal[1] * d;
+
+		// change speed
+		dot = speed[rhs_x] * normal[0] + speed[rhs_y] * normal[1];
+		dv[0] = dot * normal[0];
+		dv[1] = dot * normal[1];
+		speed[rhs_x] -= dv[0];
+		speed[rhs_y] -= dv[1];
+		speed[lhs_x] += dv[0];
+		speed[lhs_y] += dv[1];
+	}
 }
 
 void Particle::boundCollision(float xMax, float yMax, float restitution)
@@ -230,26 +285,30 @@ void Particle::collisionHandling(int cellNumber)
 {
 	register int neighbor[5];
 	register int neighborCount;
-	register int until;
+	register int start, end;
+	register int neighborStart, neighborEnd;
 	register int pIdx;
 	
 	for (register int cellIdx = 0; cellIdx < cellNumber; ++cellIdx) {
-		until = linkedCell->cellStartIndex[cellIdx + 1];
+		start = linkedCell->cellStartIndex[cellIdx];
+		end = start + linkedCell->particleNumberInCell[cellIdx];
+
 		neighborCount = linkedCell->neighborCellSize[cellIdx];
 		memcpy(neighbor, linkedCell->neighborCellIndex[cellIdx], sizeof(int) * neighborCount);
-		neighbor[neighborCount] = neighbor[neighborCount - 1] + 1;
 
-		for (register int i = linkedCell->cellStartIndex[cellIdx]; i < until; ++i) {
+		for (register int i = start; i < end; ++i) {
 			pIdx = linkedCell->particleIndex[i];
 
 			// same cell collision check
-			for (register int j = i + 1; j < until; ++j) {
+			for (register int j = i + 1; j < end; ++j) {
 				particleCollision(pIdx, linkedCell->particleIndex[j]);
 			}
 			
 			// neighbor cells collision check 
 			for (register int n = 0; n < neighborCount; ++n) {
-				for (register int j = linkedCell->cellStartIndex[neighbor[n]]; j < linkedCell->cellStartIndex[neighbor[n + 1]]; ++j) {
+				neighborStart = linkedCell->cellStartIndex[neighbor[n]];
+				neighborEnd = neighborStart + linkedCell->particleNumberInCell[neighbor[n]];
+				for (register int j = neighborStart; j < neighborEnd; ++j) {
 					particleCollision(pIdx, linkedCell->particleIndex[j]);
 				}
 			}

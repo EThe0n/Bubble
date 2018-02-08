@@ -97,9 +97,19 @@ int main()
 
 		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, &mvp[0][0]);
 
-		simulator->simulate(delta);
-		simulator->update();
-		simulator->render(channel, particleSize);
+		try {
+			simulator->simulate(delta * 0.1f);
+			simulator->update();
+			simulator->render(channel, particleSize);
+		}
+		catch (std::exception& e) {
+			fprintf(stderr, "%s \n", e.what());
+			delete simulator;
+
+			glDeleteProgram(programID);
+			glfwTerminate();
+			exit(EXIT_FAILURE);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

@@ -32,11 +32,17 @@ void Simulator::render(GLuint channel, GLuint particleSize)
 
 void Simulator::update()
 {
-	particles->update();
+	try {
+		particles->update();
+	}
+	catch (std::exception& e) {
+		throw e.what();
+	}
 }
 
 void Simulator::simulate(float deltaTime)
 {
 	particles->simulate(deltaTime);
+	particles->collisionHandling(GRID_X_COUNT * GRID_Y_COUNT);
 	particles->boundCollision(CELL_SIZE * GRID_X_COUNT, CELL_SIZE * GRID_Y_COUNT, RESTITUTION);
 }
