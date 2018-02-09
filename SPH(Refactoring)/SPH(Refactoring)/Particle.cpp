@@ -212,35 +212,22 @@ void Particle::particleCollision(int lhsIndex, int rhsIndex)
 	int sig;
 
 	if (detect <= 0.0f) {
-		// get normal vector
-		sig = (detect > 0) - (detect < 0);
-		if (distance == 0.0f) {
-			dx = -speed[rhs_x];
-			dy = -speed[rhs_y];
-			distance = sqrtf(dx * dx + dy * dy);
-			normal[0] = dx / distance;
-			normal[1] = dy / distance;
-			d = 2.0f * radius;
-		}
-		else {
-			distance = sqrtf(distance);
-			normal[0] = sig * -dx / distance;
-			normal[1] = sig * -dy / distance;
-			d = 2.0f * radius - distance;
-		}
+		distance == 0.0f ? distance = 1.0f : distance = sqrtf(distance);
 
-		// move to collision point
-		position[rhs_x] += normal[0] * d;
-		position[rhs_y] += normal[1] * d;
+		dx /= distance;
+		dy /= distance;
 
-		// change speed
+		position[rhs_x] += radius * dx;
+		position[rhs_y] += radius * dy;
+
+		sig = (detect > 0.0f) - (detect < 0.0f);
+
+		normal[0] = sig * -dx;
+		normal[1] = sig * -dy;
+
 		dot = speed[rhs_x] * normal[0] + speed[rhs_y] * normal[1];
-		dv[0] = dot * normal[0];
-		dv[1] = dot * normal[1];
-		speed[rhs_x] -= dv[0];
-		speed[rhs_y] -= dv[1];
-		speed[lhs_x] += dv[0];
-		speed[lhs_y] += dv[1];
+		speed[rhs_x] -= dot * normal[0];
+		speed[rhs_y] -= dot * normal[1];
 	}
 }
 

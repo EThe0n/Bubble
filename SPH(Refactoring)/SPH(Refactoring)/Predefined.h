@@ -4,12 +4,12 @@
 #define WINDOW_HEIGHT	768
 
 // Grid Option
-#define GRID_X_COUNT	5
-#define GRID_Y_COUNT	5
+#define GRID_X_COUNT	10
+#define GRID_Y_COUNT	10
 #define CELL_SIZE		0.0457f
 
 // Particle Option
-#define PARTICLE_NUMBER			100
+#define PARTICLE_NUMBER			800
 #define PARTICLE_RADIUS			0.00608f
 #define PARTICLE_REST_DENSITY	998.29f
 #define PARTICLE_MASS			0.02f 
