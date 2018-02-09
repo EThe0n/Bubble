@@ -15,6 +15,9 @@ public:
 	void update();
 	void simulate(float deltaTime);
 	void boundCollision(float xMax, float yMax, float restitution);
+	void calcMassDensity(int cellNumber, float h, float mass);
+	void calcPressureField(float gasStiffness, float restDensity);
+	void calcForces(int cellNumber, float surfaceTension, float vis, float h, float mass);
 	void collisionHandling(int cellNumber);
 	void initRandom(float xMax, float yMax);
 	void initSorted(float xMax, float yMax);
@@ -23,6 +26,7 @@ private :
 	float*		position;
 	float*		speed;
 	float*		pressure;
+	float*		pressureField;
 	float*		viscosity;
 	float*		surface;
 	float*		massDensity;
@@ -40,4 +44,7 @@ private :
 
 private :
 	void particleCollision(int lhsIndex, int rhsIndex);
+	void particleMassDensity(int lhsIndex, int rhsIndex, float coef, float h);
+	void particlePressureForce(int lhsIndex, int rhsIndex, float coef, float h);
+	void particleViscosityForce(int lhsIndex, int rhsIndex, float coef, float h);
 };

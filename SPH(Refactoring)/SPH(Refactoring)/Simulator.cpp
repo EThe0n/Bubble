@@ -42,7 +42,12 @@ void Simulator::update()
 
 void Simulator::simulate(float deltaTime)
 {
+	const int cellNumber = GRID_X_COUNT * GRID_Y_COUNT;
+
+	particles->calcMassDensity(cellNumber, CELL_SIZE, PARTICLE_MASS);
+	particles->calcPressureField(GAS_STIFFNESS, PARTICLE_REST_DENSITY);
+	particles->calcForces(cellNumber, SURFACE_TENSION, VISCOSITY, CELL_SIZE, PARTICLE_MASS);
 	particles->simulate(deltaTime);
-	particles->collisionHandling(GRID_X_COUNT * GRID_Y_COUNT);
+	particles->collisionHandling(cellNumber);
 	particles->boundCollision(CELL_SIZE * GRID_X_COUNT, CELL_SIZE * GRID_Y_COUNT, RESTITUTION);
 }

@@ -99,7 +99,7 @@ int main()
 
 		try {
 			simulator->update();
-			simulator->simulate(delta * 0.1f);
+			simulator->simulate(delta * 0.05f);
 			simulator->render(channel, particleSize);
 		}
 		catch (std::exception& e) {

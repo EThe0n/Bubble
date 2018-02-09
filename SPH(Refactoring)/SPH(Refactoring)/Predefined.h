@@ -4,8 +4,8 @@
 #define WINDOW_HEIGHT	768
 
 // Grid Option
-#define GRID_X_COUNT	10
-#define GRID_Y_COUNT	10
+#define GRID_X_COUNT	20
+#define GRID_Y_COUNT	20
 #define CELL_SIZE		0.0457f
 
 // Particle Option
@@ -14,6 +14,10 @@
 #define PARTICLE_REST_DENSITY	998.29f
 #define PARTICLE_MASS			0.02f 
 #define RESTITUTION				0.0f
+#define GAS_STIFFNESS			3.0f
+#define THRESHOLD				7.065f
+#define SURFACE_TENSION			0.0728f
+#define VISCOSITY				3.5f
 
 // MODE
 //#define _DEBUG
