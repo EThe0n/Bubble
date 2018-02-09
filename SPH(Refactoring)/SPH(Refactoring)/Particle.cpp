@@ -177,7 +177,21 @@ void Particle::initRandom(float xMax, float yMax)
 
 void Particle::initSorted(float xMax, float yMax)
 {
+	register int idx;
+	register float x = radius;
+	register float y = yMax - radius;
 
+	for (register int i = 0; i < particleNumber; ++i) {
+		idx = i * 2;
+		position[idx] = x;
+		position[idx + 1] = y;
+		
+		y -= size;
+		if (y <= 0.0f) {
+			y = yMax - radius;
+			x += size;
+		}
+	}
 }
 
 void Particle::particleCollision(int lhsIndex, int rhsIndex)

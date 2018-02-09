@@ -98,8 +98,8 @@ int main()
 		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, &mvp[0][0]);
 
 		try {
-			simulator->simulate(delta * 0.1f);
 			simulator->update();
+			simulator->simulate(delta * 0.1f);
 			simulator->render(channel, particleSize);
 		}
 		catch (std::exception& e) {

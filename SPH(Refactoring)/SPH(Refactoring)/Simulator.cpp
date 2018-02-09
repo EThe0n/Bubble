@@ -9,7 +9,7 @@ Simulator::Simulator()
 		grid = new Grid(GRID_X_COUNT, GRID_Y_COUNT, CELL_SIZE);
 		LinkedCell* cell = new LinkedCell(PARTICLE_NUMBER, CELL_SIZE, GRID_X_COUNT, GRID_Y_COUNT);
 		particles = new Particle(PARTICLE_NUMBER, PARTICLE_RADIUS, cell);
-		particles->initRandom(GRID_X_COUNT * CELL_SIZE, GRID_Y_COUNT * CELL_SIZE);
+		particles->initSorted(GRID_X_COUNT * CELL_SIZE, GRID_Y_COUNT * CELL_SIZE);
 	}
 	catch (std::exception e) {
 		throw std::exception(e.what());
