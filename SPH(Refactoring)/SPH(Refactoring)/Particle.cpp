@@ -274,12 +274,16 @@ void Particle::particlePressureForce(int lhsIndex, int rhsIndex, float coef, flo
 	register int rhs_x = rhsIndex * 2;
 	register int rhs_y = rhs_x + 1;
 
-	register float dx = position[rhs_x] - position[lhs_x];
-	register float dy = position[rhs_y] - position[lhs_y];
+	register float dx = position[lhs_x] - position[rhs_x];
+	register float dy = position[lhs_y] - position[rhs_y];
 	float r = sqrt(dx * dx + dy * dy);
 	register float contribution[2];
-	
-	coef = (pressureField[lhsIndex] + pressureField[rhsIndex]) * 0.5f * coef * powf((h - r) / (h * h * h), 2.0f) / r;
+
+	if (r > h) {
+		return;
+	}
+
+	coef = (0.5f * (pressureField[lhsIndex] + pressureField[rhsIndex]) * coef * powf((h - r) / (h * h * h), 2.0f));
 	contribution[0] = coef * dx;
 	contribution[1] = coef * dy;
 
@@ -435,7 +439,7 @@ void Particle::calcForces(int cellNumber, float surfaceTension, float vis, float
 			// same cell collision check
 			for (register int j = i + 1; j < end; ++j) {
 				particlePressureForce(pIdx, linkedCell->particleIndex[j], pressureCoef, h);
-				particleViscosityForce(pIdx, linkedCell->particleIndex[j], viscosityCoef, h);
+				//particleViscosityForce(pIdx, linkedCell->particleIndex[j], viscosityCoef, h);
 			}
 
 			// neighbor cells collision check 
@@ -444,7 +448,7 @@ void Particle::calcForces(int cellNumber, float surfaceTension, float vis, float
 				neighborEnd = neighborStart + linkedCell->particleNumberInCell[neighbor[n]];
 				for (register int j = neighborStart; j < neighborEnd; ++j) {
 					particlePressureForce(pIdx, linkedCell->particleIndex[j], pressureCoef, h);
-					particleViscosityForce(pIdx, linkedCell->particleIndex[j], viscosityCoef, h);
+					//particleViscosityForce(pIdx, linkedCell->particleIndex[j], viscosityCoef, h);
 				}
 			}
 		}
